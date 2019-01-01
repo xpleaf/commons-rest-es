@@ -93,7 +93,7 @@ public class IndexApi {
             JestResult jestResult = client.execute(indicesExists);
             return jestResult.isSucceeded();
         } catch (Exception e) {
-            LOG.warn("判断索引是否存在失败，原因为：{}", e.getMessage());
+            LOG.error("判断索引是否存在失败，原因为：{}", e.getMessage());
         }
         return false;
     }
@@ -115,7 +115,7 @@ public class IndexApi {
                     .settings(Settings.builder().build().getAsMap()).build());
             return jestResult.isSucceeded();
         } catch (Exception e) {
-            LOG.warn("创建索引 {} 失败，原因为：{}", indexName, e.getMessage());
+            LOG.error("创建索引 {} 失败，原因为：{}", indexName, e.getMessage());
         }
         return false;
     }
@@ -135,7 +135,7 @@ public class IndexApi {
             jestResult = client.execute(putMapping);
             return jestResult.isSucceeded();
         } catch (Exception e) {
-            LOG.warn("创建类型 {} 失败，原因为：{}", indexType, e.getMessage());
+            LOG.error("创建类型 {} 失败，原因为：{}", indexType, e.getMessage());
         }
         return false;
     }
@@ -170,7 +170,7 @@ public class IndexApi {
             JestResult jestResult = client.execute(openIndex);
             return jestResult.isSucceeded();
         } catch (Exception e) {
-            LOG.warn("打开索引失败，原因为：{}", e.getMessage());
+            LOG.error("打开索引失败，原因为：{}", e.getMessage());
         }
         return false;
     }
@@ -185,7 +185,7 @@ public class IndexApi {
             JestResult jestResult = client.execute(closeIndex);
             return jestResult.isSucceeded();
         } catch (Exception e) {
-            LOG.warn("关闭索引失败，原因为：{}", e.getMessage());
+            LOG.error("关闭索引失败，原因为：{}", e.getMessage());
         }
         return false;
     }
@@ -200,7 +200,7 @@ public class IndexApi {
             JestResult jestResult = client.execute(deleteIndex);
             return jestResult.isSucceeded();
         } catch (Exception e) {
-            LOG.warn("删除索引 {} 失败，原因为：{}", indexName, e.getMessage());
+            LOG.error("删除索引 {} 失败，原因为：{}", indexName, e.getMessage());
         }
         return false;
     }
@@ -219,7 +219,7 @@ public class IndexApi {
                 return new ArrayList<>(jsonObject.keySet());
             }
         } catch (Exception e) {
-            LOG.warn("获取索引列表失败，原因为：{}", e.getMessage());
+            LOG.error("获取索引列表失败，原因为：{}", e.getMessage());
         }
         return null;
     }
@@ -238,7 +238,7 @@ public class IndexApi {
                 indexSet = jestResult.getJsonObject().keySet();
             }
         } catch (Exception e) {
-            LOG.warn("通过别名获取索引失败，原因为：{}", e.getMessage());
+            LOG.error("通过别名获取索引失败，原因为：{}", e.getMessage());
         }
         return indexSet;
     }
@@ -259,7 +259,7 @@ public class IndexApi {
             Set<String> indexSet = getIndexByAlias(indexName);
             if (indexSet != null && !indexSet.isEmpty()) {   // 说明indexName是一个别名
                 if (indexSet.size() > 1) {
-                    LOG.warn("{} 索引别名对应有多个索引，只取其中一个索引", indexName);
+                    LOG.error("{} 索引别名对应有多个索引，只取其中一个索引", indexName);
                 }
                 indexName = indexSet.toArray()[0].toString();
             }
@@ -277,7 +277,7 @@ public class IndexApi {
                 return new Gson().fromJson(mappingJson, Map.class);
             }
         } catch (Exception e) {
-            LOG.warn("获取mapping信息失败，原因为：{}", e.getMessage());
+            LOG.error("获取mapping信息失败，原因为：{}", e.getMessage());
         }
         return null;
     }
@@ -313,7 +313,7 @@ public class IndexApi {
                 return sizeMap;
             }
         } catch (Exception e) {
-            LOG.warn("获取索引大小失败，原因为：{}", e.getMessage());
+            LOG.error("获取索引大小失败，原因为：{}", e.getMessage());
         }
         return null;
     }
@@ -336,7 +336,7 @@ public class IndexApi {
             client.close();
             return true;
         } catch (IOException e) {
-            LOG.warn("关闭客户端连接失败，原因为：{}", e.getMessage());
+            LOG.error("关闭客户端连接失败，原因为：{}", e.getMessage());
         }
         return false;
     }
