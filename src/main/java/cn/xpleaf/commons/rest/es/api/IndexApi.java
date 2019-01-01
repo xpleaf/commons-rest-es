@@ -1,11 +1,14 @@
 package cn.xpleaf.commons.rest.es.api;
 
+import cn.xpleaf.commons.rest.es.action.GetAliasSpecificNames;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;
 import io.searchbox.client.JestResult;
 import io.searchbox.client.config.HttpClientConfig;
-import io.searchbox.indices.CreateIndex;
-import io.searchbox.indices.IndicesExists;
+import io.searchbox.indices.*;
+import io.searchbox.indices.mapping.GetMapping;
 import io.searchbox.indices.mapping.PutMapping;
 import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author xpleaf
@@ -131,6 +135,109 @@ public class IndexApi {
             return false;
         // 索引存在后才能添加type，否则会失败
         return createType(indexName, indexType, properties);
+    }
+
+    /**
+     * 打开一个索引
+     * @param indexName 索引名称
+     */
+    public boolean openIndex(String indexName) {
+        OpenIndex openIndex = new OpenIndex.Builder(indexName).build();
+        try {
+            JestResult jestResult = client.execute(openIndex);
+            return jestResult.isSucceeded();
+        } catch (IOException e) {
+            LOG.warn("打开索引失败，原因为：{}", e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * 关闭一个索引
+     * @param indexName 索引名称
+     */
+    public boolean closeIndex(String indexName) {
+        CloseIndex closeIndex = new CloseIndex.Builder(indexName).build();
+        try {
+            JestResult jestResult = client.execute(closeIndex);
+            return jestResult.isSucceeded();
+        } catch (IOException e) {
+            LOG.warn("关闭索引失败，原因为：{}", e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * 删除一个索引
+     * @param indexName 索引名称
+     */
+    public boolean deleteIndex(String indexName) {
+        DeleteIndex deleteIndex = new DeleteIndex.Builder(indexName).build();
+        try {
+            JestResult jestResult = client.execute(deleteIndex);
+            return jestResult.isSucceeded();
+        } catch (IOException e) {
+            LOG.warn("删除索引{}失败，原因为：{}", indexName, e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * 通过别名获取指定的索引名称
+     * @param alias 索引别名
+     * @return 索引别名指向的索引名称，一个别名可以指向多个索引，所以返回Set
+     */
+    public Set<String> getIndexByAlias(String alias) {
+        Set<String> indexSet = null;
+        GetAliasSpecificNames getAliasSpecificNames = new GetAliasSpecificNames.Builder().alias(alias).build();
+        try {
+            JestResult jestResult = client.execute(getAliasSpecificNames);
+            if (jestResult.isSucceeded()) {
+                indexSet = jestResult.getJsonObject().keySet();
+            }
+        } catch (IOException e) {
+            LOG.warn("通过别名获取索引失败，原因为：{}", e.getMessage());
+        }
+        return indexSet;
+    }
+
+    /**
+     * 获取索引下某个type的mapping信息（schema信息）
+     * @param indexName 索引名称，可以为别名，因为通过别名也可以获取到mapping信息，
+     *                  但如果别名对应有多个索引，只返回第一个对应索引的mapping
+     * @param indexType 索引类型
+     * @return 返回一个包含type字段信息的map，k为字段名称，v为其类型信息
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, String> getMapping(String indexName, String indexType) throws IOException {
+        GetMapping getMapping = new GetMapping.Builder().build();
+        JestResult jestResult = client.execute(getMapping);
+        // 别名处理，indexName有可能是别名，先将其作为别名来获取对应的索引名称
+        Set<String> indexSet = getIndexByAlias(indexName);
+        if(indexSet != null && !indexSet.isEmpty()) {   // 说明indexName是一个别名
+            if(indexSet.size() > 1) {
+                LOG.warn("{} 索引别名对应有多个索引，只取其中一个索引", indexName);
+            }
+            indexName = indexSet.toArray()[0].toString();
+        }
+        if(jestResult.isSucceeded()) {
+            // 拿到所有索引的mapping
+            JsonObject indicesJsonObject = jestResult.getJsonObject();
+            // 获取indexName/typeName的mapping
+            try {
+                JsonObject typeJsonObject = indicesJsonObject
+                        .getAsJsonObject(indexName)
+                        .getAsJsonObject("mappings")
+                        .getAsJsonObject(indexType)
+                        .getAsJsonObject("properties");
+                // 将其转换为map对象
+                String mappingJson = typeJsonObject.toString();
+                return new Gson().fromJson(mappingJson, Map.class);
+            } catch (Exception e) {
+                LOG.warn("获取mapping信息失败，原因为：{}", e.getMessage());
+            }
+        }
+        return null;
     }
 
     /**
