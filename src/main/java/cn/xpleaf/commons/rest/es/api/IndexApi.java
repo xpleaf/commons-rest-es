@@ -15,9 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author xpleaf
@@ -193,9 +191,28 @@ public class IndexApi {
             JestResult jestResult = client.execute(deleteIndex);
             return jestResult.isSucceeded();
         } catch (Exception e) {
-            LOG.warn("删除索引{}失败，原因为：{}", indexName, e.getMessage());
+            LOG.warn("删除索引 {} 失败，原因为：{}", indexName, e.getMessage());
         }
         return false;
+    }
+
+    /**
+     * 获取索引列表
+     */
+    public List<String> indexList() {
+        Stats stats = new Stats.Builder().build();
+        try {
+            JestResult jestResult = client.execute(stats);
+            if(jestResult.isSucceeded()) {
+                // 拿到所有索引的元数据信息
+                JsonObject jsonObject = jestResult.getJsonObject().getAsJsonObject("indices");
+                // 转换为List列表后返回
+                return new ArrayList<>(jsonObject.keySet());
+            }
+        } catch (Exception e) {
+            LOG.warn("获取索引列表失败，原因为：{}", e.getMessage());
+        }
+        return null;
     }
 
     /**
