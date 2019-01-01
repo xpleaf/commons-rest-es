@@ -15,6 +15,7 @@ public class GetAliasSpecificNames extends GenericResultAbstractAction {
 
     private String alias;
 
+    // 使用protected，只允许该包下的类直接new，所以调用者需要使用下面提供的builder来创建其实例
     protected GetAliasSpecificNames(GetAliasSpecificNames.Builder builder, String alias) {
         super(builder);
         this.alias = alias;
