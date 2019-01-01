@@ -79,11 +79,16 @@ public class IndexApi {
      * @param indexName 索引名称
      * @return 1.索引存在返回true 2.索引不存在返回false
      */
-    public boolean indexExists(String indexName) throws IOException {
+    public boolean indexExists(String indexName) {
         IndicesExists indicesExists = new IndicesExists
                 .Builder(indexName).build();
-        JestResult jestResult = client.execute(indicesExists);
-        return jestResult.isSucceeded();
+        try {
+            JestResult jestResult = client.execute(indicesExists);
+            return jestResult.isSucceeded();
+        } catch (Exception e) {
+            LOG.warn("判断索引是否存在失败，原因为：{}", e.getMessage());
+        }
+        return false;
     }
 
     /**
@@ -92,15 +97,20 @@ public class IndexApi {
      * @param settings  索引设置
      * @return 1.创建成功返回true 2.创建失败返回false
      */
-    public boolean createIndex(String indexName, Map<Object, Object> settings) throws IOException {
+    public boolean createIndex(String indexName, Map<Object, Object> settings) {
         if (indexExists(indexName)) {
             // 如果索引存在，直接返回false
             return false;
         }
         // 需要先创建一个索引，才能设置mapping
-        JestResult jestResult = client.execute(new CreateIndex.Builder(indexName)
-                .settings(Settings.builder().build().getAsMap()).build());
-        return jestResult.isSucceeded();
+        try {
+            JestResult jestResult = client.execute(new CreateIndex.Builder(indexName)
+                    .settings(Settings.builder().build().getAsMap()).build());
+            return jestResult.isSucceeded();
+        } catch (Exception e) {
+            LOG.warn("创建索引 {} 失败，原因为：{}", indexName, e.getMessage());
+        }
+        return false;
     }
 
     /**
@@ -110,11 +120,17 @@ public class IndexApi {
      * @param properties    类型对应的properties，json格式，可包含类型名称或不包括
      * @return 1.创建成功返回true（type存在时也会返回true，此时相当于是更新操作） 2.创建失败返回false
      */
-    public boolean createType(String indexName, String indexType, String properties) throws IOException {
+    public boolean createType(String indexName, String indexType, String properties) {
         // 创建PutMapping对象
         PutMapping putMapping = new PutMapping.Builder(indexName, indexType, properties).build();
-        JestResult jestResult = client.execute(putMapping);
-        return jestResult.isSucceeded();
+        JestResult jestResult = null;
+        try {
+            jestResult = client.execute(putMapping);
+            return jestResult.isSucceeded();
+        } catch (Exception e) {
+            LOG.warn("创建类型 {} 失败，原因为：{}", indexType, e.getMessage());
+        }
+        return false;
     }
 
     /**
@@ -127,7 +143,7 @@ public class IndexApi {
      * @param settings      索引设置，只有当索引不存在时，该字段才有效
      * @param properties    类型对应的properties，json格式，可包含类型名称或不包括
      */
-    public boolean createType(String indexName, String indexType, Map<Object, Object> settings, String properties) throws IOException {
+    public boolean createType(String indexName, String indexType, Map<Object, Object> settings, String properties) {
         // 先创建索引
         createIndex(indexName, settings);
         // 如果上面操作后，索引还是不存在，返回false
@@ -146,7 +162,7 @@ public class IndexApi {
         try {
             JestResult jestResult = client.execute(openIndex);
             return jestResult.isSucceeded();
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.warn("打开索引失败，原因为：{}", e.getMessage());
         }
         return false;
@@ -161,7 +177,7 @@ public class IndexApi {
         try {
             JestResult jestResult = client.execute(closeIndex);
             return jestResult.isSucceeded();
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.warn("关闭索引失败，原因为：{}", e.getMessage());
         }
         return false;
@@ -176,7 +192,7 @@ public class IndexApi {
         try {
             JestResult jestResult = client.execute(deleteIndex);
             return jestResult.isSucceeded();
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.warn("删除索引{}失败，原因为：{}", indexName, e.getMessage());
         }
         return false;
@@ -195,7 +211,7 @@ public class IndexApi {
             if (jestResult.isSucceeded()) {
                 indexSet = jestResult.getJsonObject().keySet();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.warn("通过别名获取索引失败，原因为：{}", e.getMessage());
         }
         return indexSet;
@@ -243,10 +259,15 @@ public class IndexApi {
     /**
      * 关闭客户端连接
      * JestClient不用手动去执行关闭也行，因为其继承了AutoCloseable
-     * @throws IOException
      */
-    public void close() throws IOException {
-        client.close();
+    public boolean close() {
+        try {
+            client.close();
+            return true;
+        } catch (IOException e) {
+            LOG.warn("关闭客户端连接失败，原因为：{}", e.getMessage());
+        }
+        return false;
     }
 
 
