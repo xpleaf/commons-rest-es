@@ -124,12 +124,12 @@ public class IndexApi {
      * 创建类型，要求索引必须存在
      * @param indexName     索引名称
      * @param indexType     类型名称
-     * @param properties    类型对应的properties，json格式，可包含类型名称或不包括
+     * @param mapping       mapping信息，json格式，可包含类型名称或不包括
      * @return 1.创建成功返回true（type存在时也会返回true，此时相当于是更新操作） 2.创建失败返回false
      */
-    public boolean createType(String indexName, String indexType, String properties) {
+    public boolean createType(String indexName, String indexType, String mapping) {
         // 创建PutMapping对象
-        PutMapping putMapping = new PutMapping.Builder(indexName, indexType, properties).build();
+        PutMapping putMapping = new PutMapping.Builder(indexName, indexType, mapping).build();
         JestResult jestResult = null;
         try {
             jestResult = client.execute(putMapping);
@@ -148,16 +148,16 @@ public class IndexApi {
      * @param indexName     索引名称
      * @param indexType     类型名称
      * @param settings      索引设置，只有当索引不存在时，该字段才有效
-     * @param properties    类型对应的properties，json格式，可包含类型名称或不包括
+     * @param mapping       mapping信息，json格式，可包含类型名称或不包括
      */
-    public boolean createType(String indexName, String indexType, Map<Object, Object> settings, String properties) {
+    public boolean createType(String indexName, String indexType, Map<Object, Object> settings, String mapping) {
         // 先创建索引
         createIndex(indexName, settings);
         // 如果上面操作后，索引还是不存在，返回false
         if(!indexExists(indexName))
             return false;
         // 索引存在后才能添加type，否则会失败
-        return createType(indexName, indexType, properties);
+        return createType(indexName, indexType, mapping);
     }
 
     /**
