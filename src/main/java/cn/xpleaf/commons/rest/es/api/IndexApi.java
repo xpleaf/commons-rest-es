@@ -1,6 +1,7 @@
 package cn.xpleaf.commons.rest.es.api;
 
 import cn.xpleaf.commons.rest.es.action.GetAliasSpecificNames;
+import cn.xpleaf.commons.rest.es.enums.SizeUnit;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.searchbox.client.JestClient;
@@ -33,6 +34,14 @@ public class IndexApi {
     private JestClientFactory factory = new JestClientFactory();
     private JestClient client = null;
 
+    // 单位转换系数，基准为字节数
+    private static final Map<String, Double> FACTOR = new HashMap<String, Double>(){{
+        put(SizeUnit.BYTES.getUnit(), 1.0);
+        put(SizeUnit.KB.getUnit(), 1024.0);
+        put(SizeUnit.MB.getUnit(), 1024.0 * 1024.0);
+        put(SizeUnit.GB.getUnit(), 1024.0 * 1024.0 * 1024.0);
+        put(SizeUnit.TB.getUnit(), 1024.0 * 1024.0 * 1024.0 * 1024.0);
+    }};
 
     /**
      * 多个es节点的构造方法
@@ -271,6 +280,51 @@ public class IndexApi {
             }
         }
         return null;
+    }
+
+    /**
+     * 获取索引大小（指定单位）
+     * @param indexName 索引名称
+     * @return 包含大小的map，k分别为total和primary，对应索引全部分片大小（主分片+副本分片大小）和主分片大小（真实大小）
+     */
+    public Map<String, Double> indexSize(String indexName, SizeUnit sizeUnit) {
+        Stats stats = new Stats.Builder().build();
+        try {
+            JestResult jestResult = client.execute(stats);
+            if(jestResult.isSucceeded()) {
+                JsonObject jsonObject = jestResult.getJsonObject();
+                // 总的大小，主分片+副本分片
+                long indexTotalBytesSize = jsonObject
+                        .getAsJsonObject("indices")
+                        .getAsJsonObject(indexName)
+                        .getAsJsonObject("total")
+                        .getAsJsonObject("store")
+                        .get("size_in_bytes").getAsLong();
+                // 主分片大小，这才是真正的大小
+                long indexPrimaryBytesSize = jsonObject
+                        .getAsJsonObject("indices")
+                        .getAsJsonObject(indexName)
+                        .getAsJsonObject("primaries")
+                        .getAsJsonObject("store")
+                        .get("size_in_bytes").getAsLong();
+                Map<String, Double> sizeMap = new HashMap<>();
+                sizeMap.put("total", indexTotalBytesSize / FACTOR.get(sizeUnit.getUnit()));
+                sizeMap.put("primary", indexPrimaryBytesSize / FACTOR.get(sizeUnit.getUnit()));
+                return sizeMap;
+            }
+        } catch (Exception e) {
+            LOG.warn("获取索引大小失败，原因为：{}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 获取索引大小（KB）
+     * @param indexName 索引名称
+     * @return 包含大小的map，k分别为total和primary，对应索引全部分片大小（主分片+副本分片大小）和主分片大小（真实大小）
+     */
+    public Map<String, Double> indexSize(String indexName) {
+        return indexSize(indexName, SizeUnit.KB);
     }
 
     /**
