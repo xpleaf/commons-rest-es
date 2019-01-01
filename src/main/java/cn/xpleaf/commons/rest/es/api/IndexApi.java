@@ -251,22 +251,22 @@ public class IndexApi {
      * @return 返回一个包含type字段信息的map，k为字段名称，v为其类型信息
      */
     @SuppressWarnings("unchecked")
-    public Map<String, String> getMapping(String indexName, String indexType) throws IOException {
+    public Map<String, String> getMapping(String indexName, String indexType) {
         GetMapping getMapping = new GetMapping.Builder().build();
-        JestResult jestResult = client.execute(getMapping);
-        // 别名处理，indexName有可能是别名，先将其作为别名来获取对应的索引名称
-        Set<String> indexSet = getIndexByAlias(indexName);
-        if(indexSet != null && !indexSet.isEmpty()) {   // 说明indexName是一个别名
-            if(indexSet.size() > 1) {
-                LOG.warn("{} 索引别名对应有多个索引，只取其中一个索引", indexName);
+        try {
+            JestResult jestResult = client.execute(getMapping);
+            // 别名处理，indexName有可能是别名，先将其作为别名来获取对应的索引名称
+            Set<String> indexSet = getIndexByAlias(indexName);
+            if (indexSet != null && !indexSet.isEmpty()) {   // 说明indexName是一个别名
+                if (indexSet.size() > 1) {
+                    LOG.warn("{} 索引别名对应有多个索引，只取其中一个索引", indexName);
+                }
+                indexName = indexSet.toArray()[0].toString();
             }
-            indexName = indexSet.toArray()[0].toString();
-        }
-        if(jestResult.isSucceeded()) {
-            // 拿到所有索引的mapping
-            JsonObject indicesJsonObject = jestResult.getJsonObject();
-            // 获取indexName/typeName的mapping
-            try {
+            if (jestResult.isSucceeded()) {
+                // 拿到所有索引的mapping
+                JsonObject indicesJsonObject = jestResult.getJsonObject();
+                // 获取indexName/typeName的mapping
                 JsonObject typeJsonObject = indicesJsonObject
                         .getAsJsonObject(indexName)
                         .getAsJsonObject("mappings")
@@ -275,9 +275,9 @@ public class IndexApi {
                 // 将其转换为map对象
                 String mappingJson = typeJsonObject.toString();
                 return new Gson().fromJson(mappingJson, Map.class);
-            } catch (Exception e) {
-                LOG.warn("获取mapping信息失败，原因为：{}", e.getMessage());
             }
+        } catch (Exception e) {
+            LOG.warn("获取mapping信息失败，原因为：{}", e.getMessage());
         }
         return null;
     }
