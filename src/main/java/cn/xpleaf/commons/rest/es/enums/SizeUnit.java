@@ -10,7 +10,7 @@ public enum SizeUnit {
 
     TB("tb"),
     GB("gb"),
-    MB("gb"),
+    MB("mb"),
     KB("kb"),
     BYTES("bytes");
 
