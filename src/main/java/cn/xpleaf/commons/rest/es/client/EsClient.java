@@ -1,4 +1,4 @@
-package cn.xpleaf.commons.rest.es.api;
+package cn.xpleaf.commons.rest.es.client;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
