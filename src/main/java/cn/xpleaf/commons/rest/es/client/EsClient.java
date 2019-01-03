@@ -23,7 +23,7 @@ public class EsClient {
     // rest-low-level-client
     private RestClient restLowLevelClient;
     // rest-high-level-client，protected，ReaderApi、WriterApi、InfoApi需要依赖其与es节点建立连接
-    protected RestHighLevelClient client;
+    public RestHighLevelClient client;
 
     private EsClient(RestClient restLowLevelClient, RestHighLevelClient client) {
         this.restLowLevelClient = restLowLevelClient;
