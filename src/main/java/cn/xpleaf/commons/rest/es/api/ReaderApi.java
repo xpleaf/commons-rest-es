@@ -10,12 +10,15 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xpleaf
@@ -160,6 +163,47 @@ public class ReaderApi {
      */
     public EsReaderResult scroll(String scrollId) throws Exception {
         return scroll(scrollId, DEFAULT_SCROLL_TIME_WINDOW_MILLS);
+    }
+
+    /**
+     *
+     * @param queryBuilder              查询条件
+     * @param aggregationBuilder        聚合条件
+     * @return Map<String, Aggregation> 返回一个可能包含多个聚合结果的map，因为聚合查询有可能像下面这样：
+     * GET spnews/news/_search
+     * {
+     *   "size": 0,
+     *   "aggs": {
+     *     "group_by_source": {
+     *       "terms": {
+     *         "field": "source",
+     *         "size": 10
+     *       }
+     *     },
+     *     "group_by_reply":{
+     *       "terms": {
+     *         "field": "reply",
+     *         "size": 10
+     *       }
+     *     }
+     *   }
+     * }
+     * 这时，key就是group_by_source和group_by_reply，value就是其聚合的结果
+     */
+    public Map<String, Aggregation> aggSearch(QueryBuilder queryBuilder, AggregationBuilder ...aggregationBuilders) throws Exception {
+        // 构建searchSourceBuilder
+        SearchSourceBuilder searchSourceBuilder = initSearchSourceBuilder(null, 0, queryBuilder, null, null);
+        // 设置aggregationBuilder
+        for(AggregationBuilder aggregationBuilder : aggregationBuilders) {
+            searchSourceBuilder.aggregation(aggregationBuilder);
+        }
+        // 构建searchRequest
+        SearchRequest searchRequest = initSearchRequest().source(searchSourceBuilder);
+
+        // 聚合查询
+        SearchResponse searchResponse = esClient.client.search(searchRequest);
+
+        return searchResponse.getAggregations().getAsMap();
     }
 
     /**

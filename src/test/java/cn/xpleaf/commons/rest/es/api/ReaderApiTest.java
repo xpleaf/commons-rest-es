@@ -5,9 +5,15 @@ import cn.xpleaf.commons.rest.es.entity.EsReaderResult;
 import cn.xpleaf.commons.rest.es.entity.EsSort;
 import cn.xpleaf.commons.rest.es.enums.Sort;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -68,6 +74,35 @@ public class ReaderApiTest {
 
         // Note：当数据已经scroll获取完之后，最后一次esReaderResult的esDocList大小为0，
         // 这个用户可以基于此进行来判断是否已经遍历完数据
+    }
+
+    // 测试aggSearch方法
+    @Test
+    public void test03() throws Exception {
+        readerApi = new ReaderApi(esClient)
+                .setIndexName("spnews")
+                .setTypeName("news");
+        // 构建聚合条件
+        TermsAggregationBuilder groupBySource = AggregationBuilders.terms("group_by_source").field("source").size(10).minDocCount(1);
+        TermsAggregationBuilder groupByReply = AggregationBuilders.terms("group_by_reply").field("reply").size(10).minDocCount(1);
+        // 获取查询结果
+        Map<String, Aggregation> aggregationMap = readerApi.aggSearch(QueryBuilders.matchAllQuery(), groupBySource, groupByReply);
+
+        // 遍历聚合结果
+        for(String key : aggregationMap.keySet()) {
+            System.out.println("-------------------------------------------->" + key);
+            Aggregation aggregation = aggregationMap.get(key);
+            // 转换为Terms
+            Terms termsAggregation = (Terms) aggregation;
+            if(termsAggregation.getBuckets().size() > 0) {
+                for(Terms.Bucket bucket : termsAggregation.getBuckets()) {
+                    Object bucketKey = bucket.getKey();
+                    long docCount = bucket.getDocCount();
+                    System.out.println(String.format("bucket: %s, docCount: %s", bucketKey, docCount));
+                }
+            }
+        }
+        System.out.println();
     }
 
     @After
