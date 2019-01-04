@@ -42,6 +42,31 @@ public class ReaderApiTest {
         System.out.println(esReaderResult);
     }
 
+    // 测试scroll方法
+    @Test
+    public void test02() throws Exception {
+        readerApi = new ReaderApi(esClient)
+                .setIndexName("spnews")
+                .setTypeName("news");
+        String[] includeSource = {"postdate", "reply", "source", "title"};
+        EsSort esSort = new EsSort.Builder().addSort("reply", Sort.DESC).build();
+        int scrollSize = 10;
+        // 第一次scroll查询
+        EsReaderResult esReaderResult = readerApi.scroll(
+                scrollSize,
+                QueryBuilders.matchAllQuery(),
+                includeSource,
+                esSort,
+                null);
+        System.out.println(esReaderResult);
+        // 通过scrollId获取后面的数据批次
+        EsReaderResult esReaderResult1 = readerApi.scroll(esReaderResult.getScrollId());
+        System.out.println(esReaderResult1);
+
+        // 两次的scrollId是一样的
+        System.out.println(esReaderResult.getScrollId().equals(esReaderResult1.getScrollId()));
+    }
+
     @After
     public void cleanUp() throws Exception {
         esClient.close();

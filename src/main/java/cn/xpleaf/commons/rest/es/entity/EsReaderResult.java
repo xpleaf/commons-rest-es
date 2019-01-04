@@ -13,6 +13,8 @@ public class EsReaderResult {
     private long took;              // 当前查询所消耗的时间，ms
     private double successRate;     // 当前查询的成功率，successfulShards / totalShards
 
+    private String scrollId;        // scroll查询时才会有
+
     public List<EsDoc> getEsDocList() {
         return esDocList;
     }
@@ -49,6 +51,14 @@ public class EsReaderResult {
         return this;
     }
 
+    public String getScrollId() {
+        return scrollId;
+    }
+
+    public void setScrollId(String scrollId) {
+        this.scrollId = scrollId;
+    }
+
     @Override
     public String toString() {
         return "EsReaderResult{" +
@@ -56,6 +66,7 @@ public class EsReaderResult {
                 ", totalHits=" + totalHits +
                 ", took=" + took +
                 ", successRate=" + successRate +
+                ", scrollId=" + scrollId +
                 '}';
     }
 }
