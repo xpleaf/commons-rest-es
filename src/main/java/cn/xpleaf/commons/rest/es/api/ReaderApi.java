@@ -27,13 +27,13 @@ public class ReaderApi {
 
     private static Logger LOG = LoggerFactory.getLogger(ReaderApi.class);
 
-    private static final int DEFAULT_TIMEOUT_MILLS = 120 * 1000;
+    private static final long DEFAULT_TIMEOUT_MILLS = 120 * 1000;
     private static final long DEFAULT_SCROLL_TIME_WINDOW_MILLS = 60 * 1000;    // 默认的scroll时间窗口为60s
 
     private EsClient esClient;
     private String indexName;                               // 索引名称，不指定则查询所有索引
     private String typeName;                                // 类型名称，不指定则查询所有类型
-    private int timeoutMills = DEFAULT_TIMEOUT_MILLS;       // Query DSL查询级别的超时时间，默认120秒
+    private long timeoutMills = DEFAULT_TIMEOUT_MILLS;       // Query DSL查询级别的超时时间，默认120秒
 
     public ReaderApi(EsClient esClient) {
         this.esClient = esClient;
@@ -49,7 +49,7 @@ public class ReaderApi {
         return this;
     }
 
-    public ReaderApi setTimeoutMills(int timeoutMills) {
+    public ReaderApi setTimeoutMills(long timeoutMills) {
         this.timeoutMills = timeoutMills;
         return this;
     }
