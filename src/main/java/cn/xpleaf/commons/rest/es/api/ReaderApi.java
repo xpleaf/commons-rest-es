@@ -67,31 +67,8 @@ public class ReaderApi {
                                  QueryBuilder queryBuilder,
                                  String[] includeSource,
                                  EsSort esSort) throws Exception {
-        // 设置查询条件
-        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        if(queryBuilder != null) {
-            searchSourceBuilder.query(queryBuilder);
-        }
-        if(from != null) {
-            searchSourceBuilder.from(from);
-        }
-        if(size != null) {
-            searchSourceBuilder.size(size);
-        }
-        if(includeSource != null) {
-            searchSourceBuilder.fetchSource(includeSource, Strings.EMPTY_ARRAY);
-        }
-        if(esSort != null) {
-            for(FieldSortBuilder fieldSortBuilder : esSort.sortOrderList) {
-                searchSourceBuilder.sort(fieldSortBuilder);
-            }
-        }
-        // 设置超时时间
-        if(timeoutMills != 0) {
-            searchSourceBuilder.timeout(TimeValue.timeValueMillis(timeoutMills));
-        } else {
-            searchSourceBuilder.timeout(TimeValue.timeValueMillis(DEFAULT_TIMEOUT_MILLS));
-        }
+        // 构建searchSourceBuilder
+        SearchSourceBuilder searchSourceBuilder = initSearchSourceBuilder(from, size, queryBuilder, includeSource, esSort);
 
         return search(searchSourceBuilder);
     }
@@ -101,15 +78,8 @@ public class ReaderApi {
      * @param searchSourceBuilder 查询条件
      */
     public EsReaderResult search(SearchSourceBuilder searchSourceBuilder) throws Exception {
-        // 构建请求
-        SearchRequest searchRequest = new SearchRequest();
-        // 设置indexName和typeName
-        if(indexName != null) {
-            searchRequest.indices(indexName);
-        }
-        if(typeName != null) {
-            searchRequest.types(typeName);
-        }
+        // 构建searchRequest
+        SearchRequest searchRequest = initSearchRequest();
         // 设置searchSourceBuilder
         searchRequest.source(searchSourceBuilder);
 
