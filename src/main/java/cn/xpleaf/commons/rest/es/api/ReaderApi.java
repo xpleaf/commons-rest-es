@@ -88,15 +88,8 @@ public class ReaderApi {
 
         SearchResponse searchResponse = esClient.client.search(searchRequest);
 
-        // 处理查询的结果到esReaderResult
-        EsReaderResult esReaderResult = new EsReaderResult();
-        List<EsDoc> esDocList = EsDoc.genEsDocList(searchResponse.getHits());
-        long totalHits = searchResponse.getHits().getTotalHits();
-        long took = searchResponse.getTookInMillis();
-        double successRate = searchResponse.getSuccessfulShards() / (double) searchResponse.getTotalShards();
-        esReaderResult.setEsDocList(esDocList).setTotalHits(totalHits).setTook(took).setSuccessRate(successRate);
-
-        return esReaderResult;
+        // 处理查询的结果到esReaderResult，并返回
+        return handleSearchResponse(searchResponse);
     }
 
     /**
@@ -168,7 +161,7 @@ public class ReaderApi {
     /**
      *
      * @param queryBuilder              查询条件
-     * @param aggregationBuilder        聚合条件
+     * @param aggregationBuilders       聚合条件
      * @return Map<String, Aggregation> 返回一个可能包含多个聚合结果的map，因为聚合查询有可能像下面这样：
      * GET spnews/news/_search
      * {
