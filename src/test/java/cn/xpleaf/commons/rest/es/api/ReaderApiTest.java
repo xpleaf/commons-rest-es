@@ -3,6 +3,7 @@ package cn.xpleaf.commons.rest.es.api;
 import cn.xpleaf.commons.rest.es.client.EsClient;
 import cn.xpleaf.commons.rest.es.entity.EsReaderResult;
 import cn.xpleaf.commons.rest.es.entity.EsSort;
+import cn.xpleaf.commons.rest.es.enums.EsVersion;
 import cn.xpleaf.commons.rest.es.enums.Sort;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -103,6 +104,28 @@ public class ReaderApiTest {
             }
         }
         System.out.println();
+    }
+
+    // 测试自定义拦截器
+    @Test
+    public void test04() throws Exception {
+        esClient = new EsClient.Builder()
+                .setEsHosts("localhost:9200")
+                .setEsVersion(EsVersion.V56)
+                .addFilter(new CustomsFilter())
+                .build();
+        readerApi = new ReaderApi(esClient)
+                .setIndexName("spnews")
+                .setTypeName("news");
+        String[] includeSource = {"postdate", "reply", "source", "title"};
+        EsSort esSort = new EsSort.Builder().addSort("reply", Sort.DESC).build();
+        EsReaderResult esReaderResult = readerApi.search(
+                null,
+                null,
+                QueryBuilders.matchAllQuery(),
+                includeSource,
+                esSort);
+        System.out.println(esReaderResult);
     }
 
     @After

@@ -1,5 +1,7 @@
 package cn.xpleaf.commons.rest.es.client;
 
+import cn.xpleaf.commons.rest.es.enums.EsVersion;
+import cn.xpleaf.commons.rest.es.filter.AbstractQueryDSLFilter;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -7,6 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author xpleaf
@@ -46,6 +51,8 @@ public class EsClient {
 
         // es节点地址数组，eg: 192.168.10.101:9200
         private String[] esHosts;
+        private EsVersion esVersion = EsVersion.DEFAULT;
+        private List<AbstractQueryDSLFilter> filterList = new ArrayList<>();
 
         // 传入单个esHost或者多个，或者包含其的数组都可以
         public Builder setEsHosts(String... esHosts) {
@@ -53,9 +60,26 @@ public class EsClient {
             return this;
         }
 
+        // 设置Es版本号，如果不设置，默认为5.6
+        public Builder setEsVersion(EsVersion esVersion) {
+            this.esVersion = esVersion;
+            return this;
+        }
+
+        // 添加QueryDSLFilter
+        public Builder addFilter(AbstractQueryDSLFilter ...filters) {
+            filterList.addAll(Arrays.asList(filters));
+            return this;
+        }
+
         public EsClient build() throws Exception {
             RestClient restLowLevelClient = RestClient.builder(buildHttpHosts(this.esHosts)).build();
             RestHighLevelClient client = new RestHighLevelClient(restLowLevelClient);
+            // 设置RestHighLevelClient的esVersion和filterList
+            client.esVersion = this.esVersion;
+            if(filterList != null && filterList.size() > 0) {
+                client.filterList = this.filterList;
+            }
             return new EsClient(restLowLevelClient, client);
         }
 
