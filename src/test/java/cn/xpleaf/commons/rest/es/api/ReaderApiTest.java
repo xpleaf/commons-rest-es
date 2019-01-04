@@ -31,11 +31,13 @@ public class ReaderApiTest {
         readerApi = new ReaderApi(esClient)
                 .setIndexName("spnews")
                 .setTypeName("news");
+        String[] includeSource = {"postdate", "reply", "source", "title"};
         EsSort esSort = new EsSort.Builder().addSort("reply", Sort.DESC).build();
-        EsReaderResult esReaderResult = readerApi.search(null,
+        EsReaderResult esReaderResult = readerApi.search(
+                null,
                 null,
                 QueryBuilders.matchAllQuery(),
-                null,
+                includeSource,
                 esSort);
         System.out.println(esReaderResult);
     }
