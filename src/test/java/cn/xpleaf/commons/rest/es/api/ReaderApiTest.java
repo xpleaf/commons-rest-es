@@ -65,6 +65,9 @@ public class ReaderApiTest {
 
         // 两次的scrollId是一样的
         System.out.println(esReaderResult.getScrollId().equals(esReaderResult1.getScrollId()));
+
+        // Note：当数据已经scroll获取完之后，最后一次esReaderResult的esDocList大小为0，
+        // 这个用户可以基于此进行来判断是否已经遍历完数据
     }
 
     @After
