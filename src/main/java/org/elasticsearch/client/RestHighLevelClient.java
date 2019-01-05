@@ -401,7 +401,7 @@ public class RestHighLevelClient {
             String newQueryDSL = sourceQueryDSL;
             // 遍历filter，对sourceQueryDSL进行处理
             for(AbstractQueryDSLFilter filter : filterList) {
-                newQueryDSL = filter.handle(esVersion, sourceQueryDSL);
+                newQueryDSL = filter.handle(esVersion, newQueryDSL);
             }
             // 构建新的HttpEntity，使用的是ByteArrayEntity
             sourceEntity = new ByteArrayEntity(newQueryDSL.getBytes(), ContentType.APPLICATION_JSON);
