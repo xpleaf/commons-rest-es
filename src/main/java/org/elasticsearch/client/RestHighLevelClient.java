@@ -387,7 +387,7 @@ public class RestHighLevelClient {
 
         // -------------------拦截处理req-------------------
         HttpEntity sourceEntity = req.getEntity();
-        if(filterList != null && filterList.size() > 0) {
+        if(filterList != null && filterList.size() > 0 && esVersion != null) {
             InputStream content = sourceEntity.getContent();
             BufferedReader bf = new BufferedReader(new InputStreamReader(content));
             StringBuilder builder = new StringBuilder();
@@ -397,14 +397,12 @@ public class RestHighLevelClient {
             }
             // 原来的查询语句
             String sourceQueryDSL = builder.toString();
-            // 根据版本号拦截处理
-            String newQueryDSL = sourceQueryDSL;
             // 遍历filter，对sourceQueryDSL进行处理
             for(AbstractQueryDSLFilter filter : filterList) {
-                newQueryDSL = filter.handle(esVersion, newQueryDSL);
+                sourceQueryDSL = filter.handle(esVersion, sourceQueryDSL);
             }
             // 构建新的HttpEntity，使用的是ByteArrayEntity
-            sourceEntity = new ByteArrayEntity(newQueryDSL.getBytes(), ContentType.APPLICATION_JSON);
+            sourceEntity = new ByteArrayEntity(sourceQueryDSL.getBytes(), ContentType.APPLICATION_JSON);
         }
         // -------------------拦截处理req-------------------
 
