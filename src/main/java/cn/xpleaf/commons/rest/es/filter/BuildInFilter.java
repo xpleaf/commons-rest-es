@@ -27,7 +27,7 @@ public class BuildInFilter extends AbstractQueryDSLFilter {
         try {
             sourceQueryDSL = functionScoreHandler(sourceQueryDSL);
         } catch (Exception e) {
-            LOG.error("拦截处理DSL：{} 失败，原因为：", sourceQueryDSL, e.getMessage());
+            LOG.error("拦截处理DSL：{} 失败，原因为：{}", sourceQueryDSL, e.getMessage());
         }
         return sourceQueryDSL;
     }
