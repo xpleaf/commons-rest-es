@@ -5,6 +5,10 @@ import cn.xpleaf.commons.rest.es.enums.EsVersion;
 /**
  * @author xpleaf
  * @date 2019/1/4 6:41 PM
+ *
+ * 拦截器抽象类，继承该抽象类，实现其对应版本的方法即可自定义拦截规则
+ * Note：
+ * 实现时，如果对应版本添加了自定义拦截器，但没有拦截时，不要返回null，直接返回sourceQueryDSL
  */
 public abstract class AbstractQueryDSLFilter {
 

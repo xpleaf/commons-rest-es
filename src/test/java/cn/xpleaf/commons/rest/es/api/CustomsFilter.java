@@ -10,12 +10,12 @@ public class CustomsFilter extends AbstractQueryDSLFilter {
 
     @Override
     protected String handleForEsV17(String sourceQueryDSL) {
-        return null;
+        return sourceQueryDSL;
     }
 
     @Override
     protected String handleForEsV23(String sourceQueryDSL) {
-        return null;
+        return sourceQueryDSL;
     }
 
     @Override

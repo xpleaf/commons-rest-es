@@ -2,6 +2,7 @@ package cn.xpleaf.commons.rest.es.client;
 
 import cn.xpleaf.commons.rest.es.enums.EsVersion;
 import cn.xpleaf.commons.rest.es.filter.AbstractQueryDSLFilter;
+import cn.xpleaf.commons.rest.es.filter.BuildInFilter;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -80,6 +81,8 @@ public class EsClient {
             if(filterList != null && filterList.size() > 0) {
                 client.filterList = this.filterList;
             }
+            // 添加内置的拦截器
+            this.addFilter(new BuildInFilter());
             return new EsClient(restLowLevelClient, client);
         }
 
