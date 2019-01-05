@@ -5,6 +5,8 @@ import cn.xpleaf.commons.rest.es.entity.EsDoc;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 
 /**
  * @author xpleaf
@@ -38,6 +40,52 @@ public class WriterApi {
         DocWriteResponse.Result result = indexResponse.getResult();
         // 如果存在相同id，则为更新操作
         return DocWriteResponse.Result.CREATED == result || DocWriteResponse.Result.UPDATED == result;
+    }
+
+    /**
+     * 实时更新一条文档
+     * Note：为局部更新，对于存在的document，可以添加字段或修改已有字段的内容
+     * @param esDoc esDoc必须存在id
+     */
+    public boolean updateDoc(EsDoc esDoc) throws Exception {
+        if(esDoc.getDocId() == null) {
+            throw new Exception("docId不能为空！");
+        }
+        // 更新操作时，如果在es中指定id的文档不存在，是会抛出异常的
+        UpdateRequest updateRequest = new UpdateRequest(indexName, typeName, esDoc.getDocId());
+        updateRequest.doc(esDoc.getDataMap());
+        UpdateResponse updateResponse = esClient.client.update(updateRequest);
+        DocWriteResponse.Result result = updateResponse.getResult();
+
+        // NOOP，什么操作也没做，也处理为更新成功，此时说明要执行的更新操作跟document已经存在的内容是一样的
+        return DocWriteResponse.Result.UPDATED == result || DocWriteResponse.Result.NOOP == result;
+    }
+
+    /**
+     * 实时更新一条文档，upsert操作
+     * Note：为局部更新，对于存在的document，可以添加字段或修改已有字段的内容
+     * @param esDoc     esDoc必须存在id
+     * @param upsert    upsert为true时，如果document存在，则更新，不存在则写入该文档
+     *                  upsert为false时，执行普通的更新操作
+     */
+    public boolean updateDoc(EsDoc esDoc, boolean upsert) throws Exception {
+        if(esDoc.getDocId() == null) {
+            throw new Exception("docId不能为空！");
+        }
+        if(!upsert) {   // 普通的更新操作
+            return updateDoc(esDoc);
+        }
+        // 执行upsert操作
+        UpdateRequest updateRequest = new UpdateRequest(indexName, typeName, esDoc.getDocId());
+        updateRequest.upsert(esDoc.getDataMap());
+        updateRequest.doc(esDoc.getDataMap());
+        UpdateResponse updateResponse = esClient.client.update(updateRequest);
+        DocWriteResponse.Result result = updateResponse.getResult();
+
+        // NOOP，什么操作也没做，也处理为更新成功，此时说明要执行的更新操作跟document已经存在的内容是一样的
+        return DocWriteResponse.Result.CREATED == result ||
+               DocWriteResponse.Result.UPDATED == result ||
+               DocWriteResponse.Result.NOOP == result;
     }
 
 }

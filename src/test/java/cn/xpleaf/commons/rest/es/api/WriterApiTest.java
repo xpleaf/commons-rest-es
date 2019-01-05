@@ -51,6 +51,36 @@ public class WriterApiTest {
         }
     }
 
+    // 测试updateDoc方法，实时更新一条文档
+    @Test
+    public void test02() throws Exception {
+        writerApi = new WriterApi(esClient, "bigdata", "stack");
+        Map<String, Object> dataMap = new HashMap<String, Object>(){{
+            put("content", "do you like es?");   // 修改
+            put("tag", "es");                    // 新增字段
+        }};
+        EsDoc esDoc = new EsDoc("1", dataMap);
+        boolean isUpdate = writerApi.updateDoc(esDoc);
+        if(isUpdate) {
+            System.out.println("更新文档成功！");
+        }
+    }
+
+    // 测试updateDoc方法，upsert操作，更新或插入操作
+    @Test
+    public void test03() throws Exception {
+        writerApi = new WriterApi(esClient, "bigdata", "stack");
+        Map<String, Object> dataMap = new HashMap<String, Object>(){{
+            put("keyword", "hadoop");
+            put("content", "do you like hadoop?");
+        }};
+        EsDoc esDoc = new EsDoc("2", dataMap);
+        boolean isUpdate = writerApi.updateDoc(esDoc, true);
+        if(isUpdate) {
+            System.out.println("更新或插入文档成功！");
+        }
+    }
+
     @After
     public void cleanUp() throws Exception {
         esClient.close();
