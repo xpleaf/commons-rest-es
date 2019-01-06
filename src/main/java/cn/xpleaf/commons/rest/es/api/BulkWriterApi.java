@@ -1,6 +1,7 @@
 package cn.xpleaf.commons.rest.es.api;
 
 import cn.xpleaf.commons.rest.es.client.EsClient;
+import cn.xpleaf.commons.rest.es.entity.EsDoc;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.*;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author xpleaf
@@ -49,6 +51,71 @@ public class BulkWriterApi {
         this.indexName = indexName;
         this.typeName = typeName;
         this.bulkProcessor = bulkProcessor;
+    }
+
+    // 添加文档
+    public void insertDoc(EsDoc esDoc) {
+        IndexRequest indexRequest = new IndexRequest(indexName, typeName);
+        if(esDoc.getDocId() != null) {  // 是否使用用户自定义的id
+            indexRequest.id(esDoc.getDocId());
+        }
+        indexRequest.source(esDoc.getDataMap());
+        // 添加到bulkProcessor
+        bulkProcessor.add(indexRequest);
+        LOG.info("添加indexRequest: {}, index docId: {}" ,indexRequest.toString(), esDoc.getDocId());
+    }
+
+    // 更新文档，不提供upsert操作
+    public void updateDoc(EsDoc esDoc) throws Exception {
+        if(esDoc.getDocId() == null) {
+            throw new Exception("docId不能为空！");
+        }
+        // 更新操作时，如果在es中指定id的文档不存在，是会抛出异常的
+        UpdateRequest updateRequest = new UpdateRequest(indexName, typeName, esDoc.getDocId());
+        updateRequest.doc(esDoc.getDataMap());
+        // 添加到bulkProcessor
+        bulkProcessor.add(updateRequest);
+        LOG.info("添加updateRequest: {}, update docId: {}", updateRequest.toString(), esDoc.getDocId());
+    }
+
+    // 更新文档,upsert操作
+    public void updateDoc(EsDoc esDoc, boolean upsert) throws Exception {
+        if(esDoc.getDocId() == null) {
+            throw new Exception("docId不能为空！");
+        }
+        if(!upsert) {   // 普通的更新操作
+            updateDoc(esDoc);
+        } else {        // upsert操作
+            UpdateRequest updateRequest = new UpdateRequest(indexName, typeName, esDoc.getDocId());
+            updateRequest.upsert(esDoc.getDataMap());
+            updateRequest.doc(esDoc.getDataMap());
+            // 添加到bulkProcessor
+            bulkProcessor.add(updateRequest);
+            LOG.info("添加updateRequest: {}, update docId: {}", updateRequest.toString(), esDoc.getDocId());
+        }
+    }
+
+    // 删除文档
+    public void deleteDoc(String docId) throws Exception {
+        if(docId == null) {
+            throw new Exception("docId不能为空！");
+        }
+        DeleteRequest deleteRequest = new DeleteRequest(indexName, typeName, docId);
+        // 添加到bulkProcessor
+        bulkProcessor.add(deleteRequest);
+        LOG.info("添加deleteRequest: {}, delete docId: {}", deleteRequest.toString(), docId);
+    }
+
+    // 手动触发bulkProcessor的发送请求操作，不等待bulkActions、bulkSize和flushInterval
+    public void flush() {
+        bulkProcessor.flush();
+    }
+
+    // 关闭客户端
+    public void close() throws InterruptedException {
+        // 等待关闭，必须要等待关闭，否则请求还没有执行程序就退出了
+        bulkProcessor.awaitClose(Builder.DEFAULT_BULK_REQUEST_TIMEOUT + 1, TimeUnit.MINUTES);
+        esClient.close();
     }
 
     // 对外创建BulkWriterApi的接口
@@ -179,15 +246,15 @@ public class BulkWriterApi {
                                     // 判断各个请求所属的请求类型
                                     if (docWriteRequest instanceof IndexRequest) {
                                         IndexRequest indexRequest = (IndexRequest) docWriteRequest;
-                                        LOG.error("创建请求失败了！" + indexRequest.toString());
+                                        LOG.error("创建请求失败了！" + bulkItemResponse.getFailureMessage());
                                         // TODO 创建请求失败处理策略
                                     } else if (docWriteRequest instanceof UpdateRequest) {
                                         UpdateRequest updateRequest = (UpdateRequest) docWriteRequest;
-                                        LOG.error("更新请求失败了！" + updateRequest.toString());
+                                        LOG.error("更新请求失败了！" + bulkItemResponse.getFailureMessage());
                                         // TODO 更新请求失败处理策略
                                     } else if (docWriteRequest instanceof DeleteRequest) {
                                         DeleteRequest deleteRequest = (DeleteRequest) docWriteRequest;
-                                        LOG.error("删除请求失败了！" + deleteRequest.toString());
+                                        LOG.error("删除请求失败了！" + bulkItemResponse.getFailureMessage());
                                         // 可以根据自己的重试策略重新添加到bulkProcessor中
                                         // bulkProcessor.add(deleteRequest);
                                         // TODO 删除请求失败处理策略
