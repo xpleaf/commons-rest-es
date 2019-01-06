@@ -81,6 +81,16 @@ public class WriterApiTest {
         }
     }
 
+    // 测试deleteDoc方法
+    @Test
+    public void test04() throws Exception {
+        writerApi = new WriterApi(esClient, "bigdata", "stack");
+        boolean isDeleted = writerApi.deleteDoc("2");
+        if(isDeleted) {
+            System.out.println("删除文档成功！");
+        }
+    }
+
     @After
     public void cleanUp() throws Exception {
         esClient.close();

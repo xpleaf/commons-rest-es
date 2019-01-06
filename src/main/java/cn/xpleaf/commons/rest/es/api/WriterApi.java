@@ -3,6 +3,8 @@ package cn.xpleaf.commons.rest.es.api;
 import cn.xpleaf.commons.rest.es.client.EsClient;
 import cn.xpleaf.commons.rest.es.entity.EsDoc;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -86,6 +88,21 @@ public class WriterApi {
         return DocWriteResponse.Result.CREATED == result ||
                DocWriteResponse.Result.UPDATED == result ||
                DocWriteResponse.Result.NOOP == result;
+    }
+
+    /**
+     * 实时删除一条文档
+     * @param docId 需要删除的文档id，即es内部的_id
+     */
+    public boolean deleteDoc(String docId) throws Exception {
+        if(docId == null) {
+            throw new Exception("docId不能为空！");
+        }
+        DeleteRequest deleteRequest = new DeleteRequest(indexName, typeName, docId);
+        DeleteResponse deleteResponse = esClient.client.delete(deleteRequest);
+
+        // 为DocWriteResponse.Result.NOT_FOUND，表示不存在，这时删除失败
+        return DocWriteResponse.Result.DELETED == deleteResponse.getResult();
     }
 
 }
