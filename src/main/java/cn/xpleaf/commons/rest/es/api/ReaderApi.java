@@ -255,13 +255,6 @@ public class ReaderApi {
         return searchRequest;
     }
 
-    // 关闭客户端
-    public void close() {
-        if(esClient != null) {
-            esClient.close();
-        }
-    }
-
     /**
      * 将查询结果封装为EsReaderResult对象
      * @param searchResponse    查询结果
@@ -275,6 +268,13 @@ public class ReaderApi {
         esReaderResult.setEsDocList(esDocList).setTotalHits(totalHits).setTook(took).setSuccessRate(successRate);
 
         return esReaderResult;
+    }
+
+    // 关闭客户端
+    public void close() {
+        if(esClient != null) {
+            esClient.close();
+        }
     }
 
 }
