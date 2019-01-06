@@ -105,4 +105,11 @@ public class WriterApi {
         return DocWriteResponse.Result.DELETED == deleteResponse.getResult();
     }
 
+    // 关闭客户端
+    public void close() {
+        if(esClient != null) {
+            esClient.close();
+        }
+    }
+
 }
