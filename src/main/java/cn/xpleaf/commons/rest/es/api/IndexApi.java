@@ -123,19 +123,19 @@ public class IndexApi {
     /**
      * 创建类型，要求索引必须存在
      * @param indexName     索引名称
-     * @param indexType     类型名称
+     * @param typeName      类型名称
      * @param mapping       mapping信息，json格式，可包含类型名称或不包括
      * @return 1.创建成功返回true（type存在时也会返回true，此时相当于是更新操作） 2.创建失败返回false
      */
-    public boolean createType(String indexName, String indexType, String mapping) {
+    public boolean createType(String indexName, String typeName, String mapping) {
         // 创建PutMapping对象
-        PutMapping putMapping = new PutMapping.Builder(indexName, indexType, mapping).build();
+        PutMapping putMapping = new PutMapping.Builder(indexName, typeName, mapping).build();
         JestResult jestResult = null;
         try {
             jestResult = client.execute(putMapping);
             return jestResult.isSucceeded();
         } catch (Exception e) {
-            LOG.error("创建类型 {} 失败，原因为：{}", indexType, e.getMessage());
+            LOG.error("创建类型 {} 失败，原因为：{}", typeName, e.getMessage());
         }
         return false;
     }
@@ -146,18 +146,18 @@ public class IndexApi {
      * 2.如果索引存在，则只创建type
      * @return 1.创建成功返回true 2.创建失败返回false
      * @param indexName     索引名称
-     * @param indexType     类型名称
+     * @param typeName      类型名称
      * @param settings      索引设置，只有当索引不存在时，该字段才有效
      * @param mapping       mapping信息，json格式，可包含类型名称或不包括
      */
-    public boolean createType(String indexName, String indexType, Map<Object, Object> settings, String mapping) {
+    public boolean createType(String indexName, String typeName, Map<Object, Object> settings, String mapping) {
         // 先创建索引
         createIndex(indexName, settings);
         // 如果上面操作后，索引还是不存在，返回false
         if(!indexExists(indexName))
             return false;
         // 索引存在后才能添加type，否则会失败
-        return createType(indexName, indexType, mapping);
+        return createType(indexName, typeName, mapping);
     }
 
     /**
@@ -247,11 +247,11 @@ public class IndexApi {
      * 获取索引下某个type的mapping信息（schema信息）
      * @param indexName 索引名称，可以为别名，因为通过别名也可以获取到mapping信息，
      *                  但如果别名对应有多个索引，只返回第一个对应索引的mapping
-     * @param indexType 索引类型
+     * @param typeName  索引类型
      * @return 返回一个包含type字段信息的map，k为字段名称，v为其类型信息
      */
     @SuppressWarnings("unchecked")
-    public Map<String, String> getMapping(String indexName, String indexType) {
+    public Map<String, String> getMapping(String indexName, String typeName) {
         GetMapping getMapping = new GetMapping.Builder().build();
         try {
             JestResult jestResult = client.execute(getMapping);
@@ -270,7 +270,7 @@ public class IndexApi {
                 JsonObject typeJsonObject = indicesJsonObject
                         .getAsJsonObject(indexName)
                         .getAsJsonObject("mappings")
-                        .getAsJsonObject(indexType)
+                        .getAsJsonObject(typeName)
                         .getAsJsonObject("properties");
                 // 将其转换为map对象
                 String mappingJson = typeJsonObject.toString();
