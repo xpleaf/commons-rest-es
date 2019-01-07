@@ -113,7 +113,10 @@ public class IndexApi {
         try {
             JestResult jestResult = client.execute(new CreateIndex.Builder(indexName)
                     .settings(Settings.builder().build().getAsMap()).build());
-            return jestResult.isSucceeded();
+            if(!jestResult.isSucceeded()) {
+                throw new Exception(jestResult.getErrorMessage());
+            }
+            return true;
         } catch (Exception e) {
             LOG.error("创建索引 {} 失败，原因为：{}", indexName, e.getMessage());
         }
@@ -133,7 +136,10 @@ public class IndexApi {
         JestResult jestResult = null;
         try {
             jestResult = client.execute(putMapping);
-            return jestResult.isSucceeded();
+            if(!jestResult.isSucceeded()) {
+                throw new Exception(jestResult.getErrorMessage());
+            }
+            return true;
         } catch (Exception e) {
             LOG.error("创建类型 {} 失败，原因为：{}", typeName, e.getMessage());
         }
@@ -168,7 +174,10 @@ public class IndexApi {
         OpenIndex openIndex = new OpenIndex.Builder(indexName).build();
         try {
             JestResult jestResult = client.execute(openIndex);
-            return jestResult.isSucceeded();
+            if(!jestResult.isSucceeded()) {
+                throw new Exception(jestResult.getErrorMessage());
+            }
+            return true;
         } catch (Exception e) {
             LOG.error("打开索引失败，原因为：{}", e.getMessage());
         }
@@ -183,7 +192,10 @@ public class IndexApi {
         CloseIndex closeIndex = new CloseIndex.Builder(indexName).build();
         try {
             JestResult jestResult = client.execute(closeIndex);
-            return jestResult.isSucceeded();
+            if(!jestResult.isSucceeded()) {
+                throw new Exception(jestResult.getErrorMessage());
+            }
+            return true;
         } catch (Exception e) {
             LOG.error("关闭索引失败，原因为：{}", e.getMessage());
         }
@@ -198,7 +210,10 @@ public class IndexApi {
         DeleteIndex deleteIndex = new DeleteIndex.Builder(indexName).build();
         try {
             JestResult jestResult = client.execute(deleteIndex);
-            return jestResult.isSucceeded();
+            if(!jestResult.isSucceeded()) {
+                throw new Exception(jestResult.getErrorMessage());
+            }
+            return true;
         } catch (Exception e) {
             LOG.error("删除索引 {} 失败，原因为：{}", indexName, e.getMessage());
         }
@@ -212,12 +227,13 @@ public class IndexApi {
         Stats stats = new Stats.Builder().build();
         try {
             JestResult jestResult = client.execute(stats);
-            if(jestResult.isSucceeded()) {
-                // 拿到所有索引的元数据信息
-                JsonObject jsonObject = jestResult.getJsonObject().getAsJsonObject("indices");
-                // 转换为List列表后返回
-                return new ArrayList<>(jsonObject.keySet());
+            if(!jestResult.isSucceeded()) {
+                throw new Exception(jestResult.getErrorMessage());
             }
+            // 拿到所有索引的元数据信息
+            JsonObject jsonObject = jestResult.getJsonObject().getAsJsonObject("indices");
+            // 转换为List列表后返回
+            return new ArrayList<>(jsonObject.keySet());
         } catch (Exception e) {
             LOG.error("获取索引列表失败，原因为：{}", e.getMessage());
         }
@@ -234,9 +250,10 @@ public class IndexApi {
         GetAliasSpecificNames getAliasSpecificNames = new GetAliasSpecificNames.Builder().alias(alias).build();
         try {
             JestResult jestResult = client.execute(getAliasSpecificNames);
-            if (jestResult.isSucceeded()) {
-                indexSet = jestResult.getJsonObject().keySet();
+            if (!jestResult.isSucceeded()) {
+                throw new Exception(jestResult.getErrorMessage());
             }
+            indexSet = jestResult.getJsonObject().keySet();
         } catch (Exception e) {
             LOG.error("通过别名获取索引失败，原因为：{}", e.getMessage());
         }
@@ -263,19 +280,20 @@ public class IndexApi {
                 }
                 indexName = indexSet.toArray()[0].toString();
             }
-            if (jestResult.isSucceeded()) {
-                // 拿到所有索引的mapping
-                JsonObject indicesJsonObject = jestResult.getJsonObject();
-                // 获取indexName/typeName的mapping
-                JsonObject typeJsonObject = indicesJsonObject
-                        .getAsJsonObject(indexName)
-                        .getAsJsonObject("mappings")
-                        .getAsJsonObject(typeName)
-                        .getAsJsonObject("properties");
-                // 将其转换为map对象
-                String mappingJson = typeJsonObject.toString();
-                return new Gson().fromJson(mappingJson, Map.class);
+            if (!jestResult.isSucceeded()) {
+                throw new Exception(jestResult.getErrorMessage());
             }
+            // 拿到所有索引的mapping
+            JsonObject indicesJsonObject = jestResult.getJsonObject();
+            // 获取indexName/typeName的mapping
+            JsonObject typeJsonObject = indicesJsonObject
+                    .getAsJsonObject(indexName)
+                    .getAsJsonObject("mappings")
+                    .getAsJsonObject(typeName)
+                    .getAsJsonObject("properties");
+            // 将其转换为map对象
+            String mappingJson = typeJsonObject.toString();
+            return new Gson().fromJson(mappingJson, Map.class);
         } catch (Exception e) {
             LOG.error("获取mapping信息失败，原因为：{}", e.getMessage());
         }
@@ -291,27 +309,28 @@ public class IndexApi {
         Stats stats = new Stats.Builder().build();
         try {
             JestResult jestResult = client.execute(stats);
-            if(jestResult.isSucceeded()) {
-                JsonObject jsonObject = jestResult.getJsonObject();
-                // 总的大小，主分片+副本分片
-                long indexTotalBytesSize = jsonObject
-                        .getAsJsonObject("indices")
-                        .getAsJsonObject(indexName)
-                        .getAsJsonObject("total")
-                        .getAsJsonObject("store")
-                        .get("size_in_bytes").getAsLong();
-                // 主分片大小，这才是真正的大小
-                long indexPrimaryBytesSize = jsonObject
-                        .getAsJsonObject("indices")
-                        .getAsJsonObject(indexName)
-                        .getAsJsonObject("primaries")
-                        .getAsJsonObject("store")
-                        .get("size_in_bytes").getAsLong();
-                Map<String, Double> sizeMap = new HashMap<>();
-                sizeMap.put("total", indexTotalBytesSize / FACTOR.get(sizeUnit.getUnit()));
-                sizeMap.put("primary", indexPrimaryBytesSize / FACTOR.get(sizeUnit.getUnit()));
-                return sizeMap;
+            if(!jestResult.isSucceeded()) {
+                throw new Exception(jestResult.getErrorMessage());
             }
+            JsonObject jsonObject = jestResult.getJsonObject();
+            // 总的大小，主分片+副本分片
+            long indexTotalBytesSize = jsonObject
+                    .getAsJsonObject("indices")
+                    .getAsJsonObject(indexName)
+                    .getAsJsonObject("total")
+                    .getAsJsonObject("store")
+                    .get("size_in_bytes").getAsLong();
+            // 主分片大小，这才是真正的大小
+            long indexPrimaryBytesSize = jsonObject
+                    .getAsJsonObject("indices")
+                    .getAsJsonObject(indexName)
+                    .getAsJsonObject("primaries")
+                    .getAsJsonObject("store")
+                    .get("size_in_bytes").getAsLong();
+            Map<String, Double> sizeMap = new HashMap<>();
+            sizeMap.put("total", indexTotalBytesSize / FACTOR.get(sizeUnit.getUnit()));
+            sizeMap.put("primary", indexPrimaryBytesSize / FACTOR.get(sizeUnit.getUnit()));
+            return sizeMap;
         } catch (Exception e) {
             LOG.error("获取索引大小失败，原因为：{}", e.getMessage());
         }
