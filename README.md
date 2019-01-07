@@ -10,6 +10,9 @@
     - [JsonPathUtil](#JsonPathUtil)
         - [JsonPathUtilTest](#JsonPathUtilTest)
         - [JsonPathTutorial](#JsonPathTutorial)
+- [Architecture](#Architecture)
+    - [MainCode](#MainCode)
+    - [TestCode](#TestCode)
 ## Overview
 Easy to use es rest api, the wrapper of elasticsearch-rest-high-level-client and Jest API, including the custom filter module to compatible with different version of es.
 
@@ -739,4 +742,70 @@ public class JsonPathTutorial {
     }
 
 }
+```
+
+## Architecture
+如果想熟悉commons-rest-es，希望了解其源码，也是非常简单的，作者在代码中添加了大量的注释，如果熟悉es本身和elasticsearch-rest-high-level-client的API，相信很快就能理解其核心原理。
+关于elasticsearch-rest-high-level-client的使用，可以参考作者另外一个项目：https://github.com/xpleaf/rest-esApi-demo。
+### MainCode
+```bash
+main/
+├── java
+│   ├── cn
+│   │   └── xpleaf
+│   │       └── commons
+│   │           └── rest
+│   │               └── es
+│   │                   ├── action
+│   │                   │   └── GetAliasSpecificNames.java
+│   │                   ├── api
+│   │                   │   ├── BulkWriterApi.java
+│   │                   │   ├── IndexApi.java
+│   │                   │   ├── InfoApi.java
+│   │                   │   ├── ReaderApi.java
+│   │                   │   └── WriterApi.java
+│   │                   ├── client
+│   │                   │   └── EsClient.java
+│   │                   ├── entity
+│   │                   │   ├── EsDoc.java
+│   │                   │   ├── EsReaderResult.java
+│   │                   │   └── EsSort.java
+│   │                   ├── enums
+│   │                   │   ├── EsVersion.java
+│   │                   │   ├── SizeUnit.java
+│   │                   │   └── Sort.java
+│   │                   ├── filter
+│   │                   │   ├── AbstractQueryDSLFilter.java
+│   │                   │   └── BuildInFilter.java
+│   │                   └── util
+│   │                       └── JsonPathUtil.java
+│   └── org
+│       └── elasticsearch
+│           └── client
+│               ├── RestClientBuilder.java
+│               └── RestHighLevelClient.java
+└── resources
+    └── log4j.properties
+
+```
+### TestCode
+```bash
+test/
+└── java
+    └── cn
+        └── xpleaf
+            └── commons
+                └── rest
+                    └── es
+                        ├── api
+                        │   ├── BulkWriterApiTest.java
+                        │   ├── CustomsFilter.java
+                        │   ├── IndexApiTest.java
+                        │   ├── InfoApiTest.java
+                        │   ├── ReaderApiTest.java
+                        │   └── WriterApiTest.java
+                        └── util
+                            ├── JsonPathTutorial.java
+                            └── JsonPathUtilTest.java
+
 ```
