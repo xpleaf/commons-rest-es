@@ -62,7 +62,7 @@ public class BulkWriterApi {
         indexRequest.source(esDoc.getDataMap());
         // 添加到bulkProcessor
         bulkProcessor.add(indexRequest);
-        LOG.info("添加indexRequest: {}, index docId: {}" ,indexRequest.toString(), esDoc.getDocId());
+        // LOG.info("添加indexRequest: {}, index docId: {}" ,indexRequest.toString(), esDoc.getDocId());
     }
 
     // 更新文档，不提供upsert操作
