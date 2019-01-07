@@ -112,7 +112,7 @@ public class IndexApi {
         // 需要先创建一个索引，才能设置mapping
         try {
             JestResult jestResult = client.execute(new CreateIndex.Builder(indexName)
-                    .settings(Settings.builder().build().getAsMap()).build());
+                    .settings(Settings.builder().put(settings).build().getAsMap()).build());
             if(!jestResult.isSucceeded()) {
                 throw new Exception(jestResult.getErrorMessage());
             }
