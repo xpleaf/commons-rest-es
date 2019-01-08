@@ -89,6 +89,25 @@ public class IndexApiTest {
     }
 
     @Test
+    public void createType2() {
+        String mapping = "{\n" +
+                "  \"properties\":{\n" +
+                "    \"title\":{\n" +
+                "      \"type\":\"keyword\"\n" +
+                "    },\n" +
+                "    \"content\":{\n" +
+                "      \"type\":\"text\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+        HashMap<Object, Object> settings = new HashMap<>();
+        settings.put("number_of_shards", 3);
+        settings.put("number_of_replicas", 1);
+        Map mappingMap = new Gson().fromJson(mapping, Map.class);
+        System.out.println(indexApi.createType("my_index", "my_type", settings, mappingMap));
+    }
+
+    @Test
     public void openIndex() {
         System.out.println(indexApi.openIndex("my_index"));
     }

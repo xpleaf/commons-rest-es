@@ -1,11 +1,13 @@
 package cn.xpleaf.commons.rest.es.api;
 
 import cn.xpleaf.commons.rest.es.enums.SizeUnit;
+import com.google.gson.Gson;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author xpleaf
@@ -64,6 +66,25 @@ public class IndexApiTest {
                 "  }\n" +
                 "}";
         System.out.println(indexApi.createType("my_index", "my_type", mapping));
+    }
+
+    @Test
+    public void createType2() {
+        String mapping = "{\n" +
+                "  \"properties\":{\n" +
+                "    \"title\":{\n" +
+                "      \"type\":\"keyword\"\n" +
+                "    },\n" +
+                "    \"content\":{\n" +
+                "      \"type\":\"text\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+        HashMap<Object, Object> settings = new HashMap<>();
+        settings.put("number_of_shards", 3);
+        settings.put("number_of_replicas", 1);
+        Map mappingMap = new Gson().fromJson(mapping, Map.class);
+        System.out.println(indexApi.createType("my_index", "my_type", settings, mappingMap));
     }
 
     @Test

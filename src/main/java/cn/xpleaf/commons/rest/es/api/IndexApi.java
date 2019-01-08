@@ -147,6 +147,17 @@ public class IndexApi {
     }
 
     /**
+     * 创建类型，要求索引必须存在
+     * @param indexName     索引名称
+     * @param typeName      类型名称
+     * @param mapping       mapping信息，map格式，可包含类型名称或不包括
+     * @return 1.创建成功返回true（type存在时也会返回true，此时相当于是更新操作） 2.创建失败返回false
+     */
+    public boolean createType(String indexName, String typeName, Map<String, Object> mapping) {
+        return createType(indexName, typeName, new Gson().toJson(mapping));
+    }
+
+    /**
      * 创建类型，同时传入settings，如果索引不存在会自动创建索引
      * 1.如果索引不存在，则同时创建索引和type
      * 2.如果索引存在，则只创建type
@@ -164,6 +175,20 @@ public class IndexApi {
             return false;
         // 索引存在后才能添加type，否则会失败
         return createType(indexName, typeName, mapping);
+    }
+
+    /**
+     * 创建类型，同时传入settings，如果索引不存在会自动创建索引
+     * 1.如果索引不存在，则同时创建索引和type
+     * 2.如果索引存在，则只创建type
+     * @return 1.创建成功返回true 2.创建失败返回false
+     * @param indexName     索引名称
+     * @param typeName      类型名称
+     * @param settings      索引设置，只有当索引不存在时，该字段才有效
+     * @param mapping       mapping信息，map格式，可包含类型名称或不包括
+     */
+    public boolean createType(String indexName, String typeName, Map<Object, Object> settings, Map<String ,Object> mapping) {
+        return createType(indexName, typeName, settings, new Gson().toJson(mapping));
     }
 
     /**
