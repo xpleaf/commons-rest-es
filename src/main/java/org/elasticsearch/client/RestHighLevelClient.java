@@ -19,8 +19,8 @@
 
 package org.elasticsearch.client;
 
-import cn.xpleaf.commons.rest.es.enums.EsVersion;
-import cn.xpleaf.commons.rest.es.filter.AbstractQueryDSLFilter;
+import com.github.xpleaf.rest.es.enums.EsVersion;
+import com.github.xpleaf.rest.es.filter.AbstractQueryDSLFilter;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
