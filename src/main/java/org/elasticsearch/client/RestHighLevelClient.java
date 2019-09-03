@@ -25,6 +25,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
+import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionListener;
@@ -141,6 +142,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -388,21 +390,14 @@ public class RestHighLevelClient {
         // -------------------拦截处理req-------------------
         HttpEntity sourceEntity = req.getEntity();
         if(filterList != null && filterList.size() > 0 && esVersion != null) {
-            InputStream content = sourceEntity.getContent();
-            BufferedReader bf = new BufferedReader(new InputStreamReader(content));
-            StringBuilder builder = new StringBuilder();
-            String line = null;
-            while ((line = bf.readLine()) != null) {
-                builder.append(line);
-            }
             // 原来的查询语句
-            String sourceQueryDSL = builder.toString();
+            String sourceQueryDSL = EntityUtils.toString(sourceEntity);
             // 遍历filter，对sourceQueryDSL进行处理
             for(AbstractQueryDSLFilter filter : filterList) {
                 sourceQueryDSL = filter.handle(esVersion, sourceQueryDSL);
             }
             // 构建新的HttpEntity，使用的是ByteArrayEntity
-            sourceEntity = new ByteArrayEntity(sourceQueryDSL.getBytes(), ContentType.APPLICATION_JSON);
+            sourceEntity = new ByteArrayEntity(sourceQueryDSL.getBytes(Charset.forName("utf-8")), ContentType.APPLICATION_JSON);
         }
         // -------------------拦截处理req-------------------
 

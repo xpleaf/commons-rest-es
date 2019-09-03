@@ -92,7 +92,7 @@ public class EsClient {
             try {
                 for (int i = 0; i < esHosts.length; i++) {
                     String[] params = esHosts[i].split(":");
-                    httpHosts[i] = new HttpHost(params[0], Integer.valueOf(params[1]), "http");
+                    httpHosts[i] = new HttpHost(params[0], Integer.parseInt(params[1]), "http");
                 }
             } catch (Exception e) {
                 throw new Exception("es地址格式有误，解析失败：" + e.getMessage());

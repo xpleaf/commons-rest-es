@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- android-support-v4.jar：包过滤 -->
+<!--    <Match>
+        <Package name="~android\.support\.v4.*" />
+    </Match>-->
+    <!-- 类过滤、方法 -->
+<!--    <Match>
+        <Class name="com.opencdk.MusicActivity" />
+        <Method name="getMusicName" />
+    </Match>-->
+    <Match>
+        <Class name="org.elasticsearch.client.RestClientBuilder"  />
+    </Match>
+    <!-- Match all doublecheck violations in these methods of "AnotherClass". -->
+<!--    <Match>
+        <Class name="com.opencdk.AnotherClass" />
+        <Or>
+            <Method name="nonOverloadedMethod" />
+            <Method name="frob" params="int,java.lang.String" returns="void" />
+            <Method name="blat" params="" returns="boolean" />
+        </Or>
+        <Bug code="DC" />
+    </Match>-->
+    <!-- All bugs in test classes, except for JUnit-specific bugs -->
+    <Match>
+        <Class name="~.*\.*Test" />
+        <Not>
+            <Bug code="IJU" />
+        </Not>
+    </Match>
+</FindBugsFilter>
